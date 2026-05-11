@@ -4,24 +4,9 @@ import pandas as pd
 
 app = FastAPI()
 
-# Dataset inicial do Pyxis
-dados = {
-    "cidade": [
-        "Ribeirão Preto",
-        "São Paulo",
-        "Campinas",
-        "Sertãozinho"
-    ],
+# Dataset inicial do Pysis
 
-    "score": [
-        82,
-        95,
-        88,
-        75
-    ]
-}
-
-df = pd.DataFrame(dados)
+df = pd.read_csv("data/scores.csv")
 
 # Rota principal
 @app.get("/")
