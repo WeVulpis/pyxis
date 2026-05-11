@@ -220,3 +220,44 @@ def geocode(endereco: str):
         "longitude": float(resultado["lon"]),
         "display_name": resultado["display_name"]
     }
+
+@app.post("/pontos/geocode")
+def criar_ponto_geocode(ponto: dict):
+
+    endereco = ponto.get("endereco")
+
+    url = "https://nominatim.openstreetmap.org/search"
+
+    params = {
+        "q": endereco,
+        "format": "json",
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "Pyxis-Geospatial-App/1.0"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    dados = response.json()
+
+    if not dados:
+        return {"erro": "Endereço não encontrado"}
+
+    resultado = dados[0]
+
+    novo_ponto = {
+        "id": len(pontos) + 1,
+        "nome": ponto.get("nome"),
+        "tipo": ponto.get("tipo"),
+        "endereco": endereco,
+        "latitude": float(resultado["lat"]),
+        "longitude": float(resultado["lon"])
+    }
+
+    pontos.append(novo_ponto)
+
+    return {
+        "mensagem": "Ponto criado com sucesso",
+        "ponto": novo_ponto
+    }
