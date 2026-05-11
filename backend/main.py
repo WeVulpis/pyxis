@@ -161,3 +161,33 @@ def calcular_distancia(dados: dict):
         "destino": destino,
         "distancia_km": round(distancia, 2)
     }
+
+@app.post("/rota")
+def calcular_rota(dados: dict):
+    origem = dados.get("origem")
+
+    pontos_calculados = []
+
+    for ponto in pontos:
+        distancia = calcular_distancia_km(
+            origem["latitude"],
+            origem["longitude"],
+            ponto["latitude"],
+            ponto["longitude"]
+        )
+
+        ponto_com_distancia = ponto.copy()
+        ponto_com_distancia["distancia_km"] = round(distancia, 2)
+
+        pontos_calculados.append(ponto_com_distancia)
+
+    rota_ordenada = sorted(
+        pontos_calculados,
+        key=lambda ponto: ponto["distancia_km"]
+    )
+
+    return {
+        "origem": origem,
+        "total_pontos": len(rota_ordenada),
+        "rota_sugerida": rota_ordenada
+    }
