@@ -1,22 +1,39 @@
 from math import radians, sin, cos, sqrt, atan2
+
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
 import requests
 import pandas as pd
 
+
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:5173"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Dataset inicial do Pyxis
 df = pd.read_csv("data/scores.csv")
 
+# Lista temporária de pontos
 pontos = []
 
-# Rota principal
+
 @app.get("/")
 def home():
     return {"message": "Pyxis API Online"}
 
 
-# Consulta de CEP
+@app.get("/health")
+def health():
+    return {"status": "online"}
+
+
 @app.get("/cep/{cep}")
 def buscar_cep(cep: str):
     url = f"https://viacep.com.br/ws/{cep}/json/"
@@ -24,13 +41,6 @@ def buscar_cep(cep: str):
     return response.json()
 
 
-# Healthcheck
-@app.get("/health")
-def health():
-    return {"status": "online"}
-
-
-# Consulta de cidade
 @app.get("/cidade/{nome}")
 def buscar_cidade(nome: str):
     return {
@@ -39,13 +49,9 @@ def buscar_cidade(nome: str):
     }
 
 
-# Score inteligente usando pandas
 @app.get("/score/{cidade}")
 def score(cidade: str):
-
-    resultado = df[
-        df["cidade"].str.lower() == cidade.lower()
-    ]
+    resultado = df[df["cidade"].str.lower() == cidade.lower()]
 
     if resultado.empty:
         return {"erro": "Cidade não encontrada"}
@@ -68,19 +74,15 @@ def score(cidade: str):
     }
 
 
-# Ranking das cidades por score
 @app.get("/ranking")
 def ranking():
     df_ordenado = df.sort_values(by="score", ascending=False)
-
     return df_ordenado.to_dict(orient="records")
+
 
 @app.get("/insights/{cidade}")
 def insights(cidade: str):
-
-    resultado = df[
-        df["cidade"].str.lower() == cidade.lower()
-    ]
+    resultado = df[df["cidade"].str.lower() == cidade.lower()]
 
     if resultado.empty:
         return {"erro": "Cidade não encontrada"}
@@ -101,6 +103,7 @@ def insights(cidade: str):
         "score": score,
         "insight": insight
     }
+
 
 @app.post("/pontos")
 def criar_ponto(ponto: dict):
@@ -127,6 +130,8 @@ def listar_pontos():
         "total": len(pontos),
         "pontos": pontos
     }
+
+
 def calcular_distancia_km(lat1, lon1, lat2, lon2):
     raio_terra_km = 6371
 
@@ -138,7 +143,11 @@ def calcular_distancia_km(lat1, lon1, lat2, lon2):
     diferenca_lat = lat2 - lat1
     diferenca_lon = lon2 - lon1
 
-    a = sin(diferenca_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(diferenca_lon / 2) ** 2
+    a = (
+        sin(diferenca_lat / 2) ** 2
+        + cos(lat1) * cos(lat2) * sin(diferenca_lon / 2) ** 2
+    )
+
     c = 2 * atan2(sqrt(a), sqrt(1 - a))
 
     return raio_terra_km * c
@@ -161,6 +170,7 @@ def calcular_distancia(dados: dict):
         "destino": destino,
         "distancia_km": round(distancia, 2)
     }
+
 
 @app.post("/rota")
 def calcular_rota(dados: dict):
@@ -192,6 +202,7 @@ def calcular_rota(dados: dict):
         "rota_sugerida": rota_ordenada
     }
 
+
 @app.get("/geocode")
 def geocode(endereco: str):
     url = "https://nominatim.openstreetmap.org/search"
@@ -221,9 +232,9 @@ def geocode(endereco: str):
         "display_name": resultado["display_name"]
     }
 
+
 @app.post("/pontos/geocode")
 def criar_ponto_geocode(ponto: dict):
-
     endereco = ponto.get("endereco")
 
     url = "https://nominatim.openstreetmap.org/search"
