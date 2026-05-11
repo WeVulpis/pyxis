@@ -7,6 +7,7 @@ app = FastAPI()
 # Dataset inicial do Pyxis
 df = pd.read_csv("data/scores.csv")
 
+pontos = []
 
 # Rota principal
 @app.get("/")
@@ -98,4 +99,30 @@ def insights(cidade: str):
         "cidade": cidade,
         "score": score,
         "insight": insight
+    }
+
+@app.post("/pontos")
+def criar_ponto(ponto: dict):
+    novo_ponto = {
+        "id": len(pontos) + 1,
+        "nome": ponto.get("nome"),
+        "tipo": ponto.get("tipo"),
+        "endereco": ponto.get("endereco"),
+        "latitude": ponto.get("latitude"),
+        "longitude": ponto.get("longitude")
+    }
+
+    pontos.append(novo_ponto)
+
+    return {
+        "mensagem": "Ponto cadastrado com sucesso",
+        "ponto": novo_ponto
+    }
+
+
+@app.get("/pontos")
+def listar_pontos():
+    return {
+        "total": len(pontos),
+        "pontos": pontos
     }
