@@ -46,7 +46,19 @@ def score(cidade: str):
 
     score = int(resultado.iloc[0]["score"])
 
+    categoria = "baixo potencial"
+
+    if score >= 90:
+        categoria = "altíssimo potencial"
+
+    elif score >= 80:
+        categoria = "alto potencial"
+
+    elif score >= 70:
+        categoria = "médio potencial"
+
     return {
         "cidade": cidade,
-        "score": score
+        "score": score,
+        "categoria": categoria
     }
