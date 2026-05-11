@@ -1,3 +1,4 @@
+from math import radians, sin, cos, sqrt, atan2
 from fastapi import FastAPI
 import requests
 import pandas as pd
@@ -125,4 +126,38 @@ def listar_pontos():
     return {
         "total": len(pontos),
         "pontos": pontos
+    }
+def calcular_distancia_km(lat1, lon1, lat2, lon2):
+    raio_terra_km = 6371
+
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    diferenca_lat = lat2 - lat1
+    diferenca_lon = lon2 - lon1
+
+    a = sin(diferenca_lat / 2) ** 2 + cos(lat1) * cos(lat2) * sin(diferenca_lon / 2) ** 2
+    c = 2 * atan2(sqrt(a), sqrt(1 - a))
+
+    return raio_terra_km * c
+
+
+@app.post("/distancia")
+def calcular_distancia(dados: dict):
+    origem = dados.get("origem")
+    destino = dados.get("destino")
+
+    distancia = calcular_distancia_km(
+        origem["latitude"],
+        origem["longitude"],
+        destino["latitude"],
+        destino["longitude"]
+    )
+
+    return {
+        "origem": origem,
+        "destino": destino,
+        "distancia_km": round(distancia, 2)
     }
