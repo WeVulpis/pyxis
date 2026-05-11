@@ -191,3 +191,32 @@ def calcular_rota(dados: dict):
         "total_pontos": len(rota_ordenada),
         "rota_sugerida": rota_ordenada
     }
+
+@app.get("/geocode")
+def geocode(endereco: str):
+    url = "https://nominatim.openstreetmap.org/search"
+
+    params = {
+        "q": endereco,
+        "format": "json",
+        "limit": 1
+    }
+
+    headers = {
+        "User-Agent": "Pyxis-Geospatial-App/1.0"
+    }
+
+    response = requests.get(url, params=params, headers=headers)
+    dados = response.json()
+
+    if not dados:
+        return {"erro": "Endereço não encontrado"}
+
+    resultado = dados[0]
+
+    return {
+        "endereco": endereco,
+        "latitude": float(resultado["lat"]),
+        "longitude": float(resultado["lon"]),
+        "display_name": resultado["display_name"]
+    }
